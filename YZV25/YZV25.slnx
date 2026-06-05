@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="YZV25.Core/YZV25.Core.csproj" />
+  <Project Path="YZV25.UI/YZV25.UI.csproj" />
+</Solution>

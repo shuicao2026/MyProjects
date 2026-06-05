@@ -1,0 +1,6 @@
+@YZV25_HostAddress = http://localhost:5107
+
+GET {{YZV25_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
