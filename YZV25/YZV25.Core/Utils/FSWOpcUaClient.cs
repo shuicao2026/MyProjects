@@ -20,7 +20,16 @@ namespace YZV25.Utils
 
         public void Connect()
         {
-            opcUaClient.ConnectServer(url).Wait();
+            try
+            {
+                opcUaClient.ConnectServer(url).Wait();
+            }
+            catch (Exception ex)
+            {
+
+                Console.WriteLine($"{url} OPCUA服务连接失败:{ex.Message}");
+            }
+
         }
 
         public 搅拌焊 ReadFSWData()
@@ -87,6 +96,7 @@ namespace YZV25.Utils
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"{url} OPCUA服务读取失败{ex.Message}");
 
             }
 
@@ -125,10 +135,10 @@ namespace YZV25.Utils
                 return json.ToString();
 
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Console.WriteLine($"{url} OPCUA服务读取报警失败{ex.Message}");
 
-                
             }
 
          

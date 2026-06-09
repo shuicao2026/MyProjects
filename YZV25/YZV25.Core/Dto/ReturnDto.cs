@@ -9,6 +9,7 @@
 
     public class ReturnDataDto<T> : ReturnDto
     {
+        public int Count { get; set; }
         public T data { get; set; }
     }   
 }

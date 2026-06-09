@@ -33,20 +33,23 @@
             // 
             // fpContainer
             // 
+            fpContainer.AutoScroll = true;
             fpContainer.Dock = DockStyle.Fill;
             fpContainer.Location = new Point(0, 0);
+            fpContainer.Margin = new Padding(4, 4, 4, 4);
             fpContainer.Name = "fpContainer";
-            fpContainer.Size = new Size(805, 543);
+            fpContainer.Size = new Size(1035, 639);
             fpContainer.TabIndex = 0;
             fpContainer.Text = "flowPanel1";
             // 
-            // PdaListUserControl
+            // PdaListUCtrl
             // 
-            AutoScaleDimensions = new SizeF(7F, 17F);
+            AutoScaleDimensions = new SizeF(9F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             Controls.Add(fpContainer);
-            Name = "PdaListUserControl";
-            Size = new Size(805, 543);
+            Margin = new Padding(4, 4, 4, 4);
+            Name = "PdaListUCtrl";
+            Size = new Size(1035, 639);
             Load += PdaListUserControl_Load;
             ResumeLayout(false);
         }

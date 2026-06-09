@@ -32,38 +32,7 @@ namespace YZV25.Controllers
         [HttpPost("force")]
         public async Task<ReturnDto> ForceSignOut(PdaForceParam pdaDto)
         {
-            var res = await this._scanService.ForceFinish(pdaDto);
-            switch (res)
-            {
-                case 0:
-                    return new ReturnDto
-                    {
-                        code = 0,
-                        msg = "操作成功"
-
-                    };
-                case 1:
-                    return new ReturnDto
-                    {
-                        code = 1,
-                        msg = "操作失败"
-                    };
-                case -2:
-                    return new ReturnDto
-                    {
-                        code = 1,
-                        msg = "设备配置错误"
-                    };
-                default:
-                    return new ReturnDto
-                    {
-                        code = -1,
-                        msg = "密码错误"
-                    };
-
-
-
-            }
+            return await this._scanService.ForceFinish(pdaDto);
 
         }
 

@@ -74,5 +74,29 @@ namespace YZV25.Entity
         )]
         public DateTime? UpdateTime { get; set; }
 
-    }
+
+
+        /// <summary>
+        /// 名称
+        /// </summary>
+        [SugarColumn(
+            ColumnName = "face",
+            Length = 100,
+            IsNullable = true,
+            ColumnDescription = "工作台面名称"
+        )]
+        public string Face { get; set; }
+
+
+        /// <summary>
+        /// 0 - 未知，1-正常，2-屏蔽
+        /// </summary>
+        [SugarColumn(
+            ColumnName = "mes_status",
+            IsNullable = true,
+            ColumnDescription = "MES状态"
+        )]
+        public int MesStatus { get; set; }
+
+        }
 }

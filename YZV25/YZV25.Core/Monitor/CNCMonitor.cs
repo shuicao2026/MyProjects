@@ -1,9 +1,11 @@
-﻿using HslCommunication.MQTT;
+﻿using Dm;
+using HslCommunication.MQTT;
 using MediatR;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Text;
 using WinformApp.Utils;
+using YZV25.Core.Handler;
 using YZV25.Core.Monitor;
 using YZV25.Dal;
 using YZV25.Dto;
@@ -37,23 +39,31 @@ namespace YZV25.Monitor
 
         protected override bool SendMesStatusData(DeviceStatusInfo deviceStatusInfo)
         {
-          
-            var result = this.mesRpcClient.PostDeviceStatus(this.code, deviceStatusInfo);
 
-            logger.LogWarning($"{devicetype}设备:{deviceName},发送MES状态数据:{deviceStatusInfo.FaultConditions}，MES：{result.Success}，{result.Message}");
+            var result = this.mesRpcClient.PostDeviceStatus(deviceStatusInfo.Barcode, deviceStatusInfo);
+
+            this.mediator.Publish(new LogMesResultRequest()
+            {
+               
+                Payload = deviceStatusInfo.FaultConditions,
+                DeviceCode = deviceStatusInfo.DeviceCode,
+                DeviceName = deviceStatusInfo.Name,
+                DeviceType = deviceStatusInfo.DeviceType,
+                MesOperation = "状态数据",
+                BarCode =deviceStatusInfo.Barcode,
+                PdaNo = deviceStatusInfo.PdaNo,
+                Response = result
+            });
 
             return result.Success;
         }
-        /// <summary>
-        /// 发送MES 加工数据
-        /// </summary>
-        /// <returns></returns>
+
         protected override bool SendMesData(string barcode, DeviceInfo deviceInfo, string status)
         {
             var data = fanucCNCClient.ReadCncData();
             if (data == null)
             {
-                logger.LogWarning($"{devicetype}设备:{deviceName},条码:{barcode},{status},获取数据失败。");
+                logger.LogWarning($"{devicetype}设备:{deviceName}({deviceCode}),条码:{barcode},{status},获取数据失败。");
                 data = new CNC();
             }
 
@@ -61,7 +71,18 @@ namespace YZV25.Monitor
             {
                 var mesResp = mesRpcClient.PostHandling(barcode, deviceInfo, data);
 
-                logger.LogInformation($"{devicetype}设备:{deviceName},条码:{barcode},{status},发送MES数据：{JsonConvert.SerializeObject(data)}");
+                this.mediator.Publish(new LogMesResultRequest()
+                {
+                    Payload = data,
+                    DeviceCode = deviceInfo.DeviceCode,
+                    DeviceName = deviceInfo.Name,
+                    DeviceType = deviceInfo.DeviceType,
+                    MesOperation = "加工中",
+                    BarCode = barcode,
+                    PdaNo = deviceInfo.PdaNo,
+                    Response = mesResp
+
+                });
 
                 return mesResp.Success;
 
@@ -72,7 +93,20 @@ namespace YZV25.Monitor
             {
                 var mesResp = mesRpcClient.PostOutStation(barcode, deviceInfo, data);
 
-                logger.LogInformation($"{devicetype}设备:{deviceName},条码:{barcode},{status},发送MES数据：{JsonConvert.SerializeObject(data)}");
+
+                this.mediator.Publish(new LogMesResultRequest()
+                {
+                    Payload = data,
+                    DeviceCode = deviceInfo.DeviceCode,
+                    DeviceName = deviceInfo.Name,
+                    DeviceType = deviceInfo.DeviceType,
+                    MesOperation = "加工完成",
+                    BarCode = barcode,
+                    PdaNo = device.PdaNo,
+                    Response = mesResp
+
+                });
+
 
                 return mesResp.Success;
 
@@ -97,16 +131,19 @@ namespace YZV25.Monitor
         protected override bool HandleAlarmStatus(string barcode, DeviceInfo deviceInfo)
         {
 
-            var status = this.fanucCNCClient.ReadSysStatus();
+             var status = this.fanucCNCClient.ReadSysStatus();
 
             //无法读取状态信息，认为设备离线
-            if (status==null){
+            if (status == null)
+            {
 
                 var devstatus = new Dto.DeviceStatusInfo
                 {
+                    PdaNo=deviceInfo.PdaNo,
                     DeviceCode = deviceInfo.DeviceCode,
                     DeviceType = deviceInfo.DeviceType,
                     Name = deviceInfo.Name,
+                    Barcode=barcode,
                     IsOnline = 0,
                     RunningState = 0,
                     StateGenTime = DateTime.Now,
@@ -141,6 +178,8 @@ namespace YZV25.Monitor
 
             var statusInfo = new Dto.DeviceStatusInfo
             {
+                Barcode=barcode,
+                PdaNo = deviceInfo.PdaNo,
                 DeviceCode = deviceInfo.DeviceCode,
                 DeviceType = deviceInfo.DeviceType,
                 Name = deviceInfo.Name,
@@ -150,7 +189,7 @@ namespace YZV25.Monitor
                 FaultConditions = jobj.ToString()
 
             };
-            return SendMesStatusData(statusInfo); 
+            return SendMesStatusData(statusInfo);
         }
 
         protected override object PraseMqttPayload(byte[] Payload)

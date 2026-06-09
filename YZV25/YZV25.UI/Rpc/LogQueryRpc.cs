@@ -18,14 +18,25 @@ namespace YZV25UI.Rpc
         public LogQueryRpc() { }
 
 
-        public async Task<ReturnDataDto<List<LogDto>>> GetRealTimeLog(int lastId)
+        public async Task<ReturnDataDto<List<BusinessLogDto>>> GetRealTimeLog(int lastId)
         {
 
-            var response = await _client.GetAsync($"api/log/GetRealTimeLog?lastId={lastId}");
+            var response = await _client.GetAsync($"api/BusinessLog/GetRealTimeLog?lastId={lastId}");
 
-          var content = await response.Content.ReadAsStringAsync();
-            ReturnDataDto<List<LogDto>> returnData = JsonConvert.DeserializeObject<ReturnDataDto<List<LogDto>>>(content);
-           // return JsonConvert.DeserializeObject<List<LogDto>>(content);
+            var content = await response.Content.ReadAsStringAsync();
+            ReturnDataDto<List<BusinessLogDto>> returnData = JsonConvert.DeserializeObject<ReturnDataDto<List<BusinessLogDto>>>(content);
+
+            return returnData;
+        }
+
+
+        public async Task<ReturnDataDto<List<BusinessLogDto>>> GetBusinessLogs(string text, int pageIndex, int pageSize)
+        {
+
+            var response = await _client.GetAsync($"api/BusinessLog/QueryLogs?text={text}&pageIndex={pageIndex}&pageSize={pageSize}");
+
+            var content = await response.Content.ReadAsStringAsync();
+            ReturnDataDto<List<BusinessLogDto>> returnData = JsonConvert.DeserializeObject<ReturnDataDto<List<BusinessLogDto>>>(content);
 
             return returnData;
         }

@@ -64,6 +64,14 @@ namespace YZV25.Dto
     public class DeviceInfo
     {
 
+        /// <summary>
+        /// 设备对应pda编号
+        /// </summary>
+        public int PdaNo { get; set; }
+
+        /// <summary>
+        /// 设备名称
+        /// </summary>
         public string Name { get; set; }
 
         /// <summary>
@@ -76,6 +84,9 @@ namespace YZV25.Dto
         /// 设备类型
         /// </summary>
         public string DeviceType { get; set; }
+
+
+        public string Barcode { get; set; }
 
 
 

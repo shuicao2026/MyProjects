@@ -55,5 +55,11 @@ namespace YZV25.Dto
         /// </summary>
  
         public string DeviceTitle { get; set; }
+
+
+        /// <summary>
+        /// 条码对应的工作台面
+        /// </summary>
+        public string Face { get; set; }
     }
 }

@@ -15,11 +15,11 @@ namespace YZV25.Core.Handler
         public Task Handle(StopMonitorRequest notification, CancellationToken cancellationToken)
         {
 
-            Task.Run(() =>
+            Task.Run(async () =>
             {
                 using var scope = this._serviceScopeFactory.CreateScope();  
                 var monitor = scope.ServiceProvider.GetRequiredKeyedService<IMonitor>(notification.Device.Name);
-                monitor.Stop();
+                await monitor.Stop();
             }, cancellationToken);
         
 

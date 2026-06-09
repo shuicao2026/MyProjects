@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using System.Drawing;
 using System.Linq;
@@ -21,13 +22,22 @@ namespace YZV25.UI.UserControls
         private System.Timers.Timer _timer;
         private int _counter = 0;
         private int lastId = 0;
-        AntList<LogDto> logRts = new AntList<LogDto>();
+
+        private int count = 0;
+        private string text = string.Empty;
+        private int pageIndex = 1;
+        private int pageSize = 10;
+
+        AntList<BusinessLogDto> logRts = new AntList<BusinessLogDto>();
         public RealTimeLogUCtrl()
         {
             InitializeComponent();
             InitialTableColumns();
             InitializeTimer();
-        
+
+            this.pagination1.PageSize = pageSize;
+            this.pagination1.Enabled = false;
+
 
         }
 
@@ -93,31 +103,123 @@ namespace YZV25.UI.UserControls
             var cols = new ColumnCollection() {
                 new Column("Id", "序号"){
                 Width="40"},
-                new Column("Level", "日志级别")
+                new Column("PdaNo", "PDA编号")
                 {
-                    Width="120"
+                    Width="80"
                 },
-                     new Column("TimeStamp", "日志时间")
+                     new Column("DeviceName", "设备名称")
                 {
-                    Width="160",
-                    MaxWidth="160"
+                    Width="60",
+                    MaxWidth="60"
 
 
                 },
-                new Column("Message", "日志信息")
+               new Column("DeviceCode", "设备代码")
                 {
-                   MaxWidth="50%"
+                    Width="100",
+                    MaxWidth="100"
                 },
-           
+
+               new Column("Barcode", "条码编号")
+                {
+                    Width="180",
+                    MaxWidth="180"
+                },
+                new Column("MesEnabledStatus", "MES启用")
+                {
+                    Width="80",
+                    MaxWidth="80"
+                },
+                new Column("MesOperation", "MES操作")
+                {
+                    Width="80",
+                    MaxWidth="80"
+                },
+
+               new Column("MesResult", "MES结果")
+                {
+                    Width="80",
+                    MaxWidth="80"
+                },
+
+                 new Column("MesReturnContent", "MES返回内容")
+                {
+                    MinWidth="160",
+
+
+                },
+
+
+
             };
             this.tbLog.Columns = cols;
         }
 
-       
+
         private void RealTimeLogUCtrl_Load(object sender, EventArgs e)
         {
+            switch1.Checked = true;
             _timer.Start();
 
+        }
+
+        private void tbLog_CellClick(object sender, TableClickEventArgs e)
+        {
+
+        }
+
+        private void switch1_CheckedChanged(object sender, BoolEventArgs e)
+        {
+            if (e.Value)
+            {
+
+                this.logRts.Clear();
+                _timer.Start();
+
+                this.pagination1.Enabled = false;
+            }
+            else
+            {
+                _timer.Stop();
+
+                this.pagination1.Enabled = true;
+            }
+
+        }
+
+
+        private async void btnQuery_Click_2(object sender, EventArgs e)
+        {
+            this.pagination1.Enabled = true;
+
+            switch1.Checked = false;
+            _timer.Stop();
+            logRts.Clear();
+
+            ReturnDataDto<List<BusinessLogDto>> res = await logQueryRpc.GetBusinessLogs(tbText.Text, pageIndex, pageSize);
+
+            if (res.data == null)
+            {
+                return;
+            }
+
+            logRts.AddRange(res.data);
+
+
+            this.pagination1.Total = res.Count;
+
+        }
+
+        private async void pagination1_ValueChanged(object sender, PagePageEventArgs e)
+        {
+            ReturnDataDto<List<BusinessLogDto>> res = await logQueryRpc.GetBusinessLogs(tbText.Text,
+                e.Current, pageSize);
+            logRts.Clear();
+
+            logRts.AddRange(res.data);
+
+
+            this.pagination1.Total = res.Count;
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using Dm;
+using Microsoft.Extensions.Configuration;
 using Model;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -118,19 +119,32 @@ namespace YZV25.Utils
             }
         }
 
-
-        private bool IsEnable()
+        /// <summary>
+        /// 判断是否启用mes
+        /// </summary>
+        /// <returns></returns>
+        public bool IsEnable()
         {
             return Convert.ToBoolean(this.configuration["MES:Enable"]);
 
         }
-        private bool IsBlock(string deviceName, string deviceType)
+
+        /// <summary>
+        /// 判断设备是否屏蔽了mes
+        /// </summary>
+        /// <param name="deviceName"></param>
+        /// <param name="deviceType"></param>
+        /// <returns></returns>
+        public bool IsBlock(string deviceName, string deviceType)
         {
+            var json = this.configuration.GetSection("MES:Block");
 
 
-            var myArray = this.configuration.GetSection("MES:Block")?.Get<string[]>();
+            var myArray = JsonConvert.DeserializeObject<string[]>(json.Value??"[]");
+            // JArray.Parse(json.Value ?? "");//this.configuration.GetSection("MES:Block")?.Get<string[]>();
 
-            return !IsEnable() || (myArray!=null&&myArray.Contains(deviceName));
+
+            return !IsEnable() || (myArray != null && myArray.Contains(deviceName));
 
         }
 
@@ -142,7 +156,7 @@ namespace YZV25.Utils
         /// <param name="device"></param>
         /// <param name="data"></param>
         /// <returns></returns>
-        private MesDto<Value> GenEnterStation (string barCode, DeviceInfo device)
+        private MesDto<Value> GenEnterStation(string barCode, DeviceInfo device)
         {
             // Implementation for GenEnterStation
             MesDto<Value> mesDto = new MesDto<Value>();
@@ -153,7 +167,7 @@ namespace YZV25.Utils
             context.Ticket = "";
             context.InvOrgId = 1;
             mesDto.Context = context;
-    
+
 
 
             Parameter<Value> parameters = new Parameter<Value>();
@@ -199,7 +213,7 @@ namespace YZV25.Utils
             context.Ticket = "";
             context.InvOrgId = 1;
             mesDto.Context = context;
-     
+
 
             Parameter<Value> parameters = new Parameter<Value>();
 

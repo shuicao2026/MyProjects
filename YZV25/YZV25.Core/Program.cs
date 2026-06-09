@@ -4,6 +4,7 @@ using HslCommunication.Profinet.Siemens;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
+using Serilog.Core;
 using Serilog.Events;
 using Serilog.Sinks.MSSqlServer;
 using Serilog.Sinks.SystemConsole.Themes;
@@ -11,11 +12,13 @@ using SqlSugar;
 using System.Reflection;
 using YZV25.Core.Monitor;
 using YZV25.Core.Service;
+using YZV25.Core.Utils;
 using YZV25.Dal;
 using YZV25.Dto;
 using YZV25.Monitor;
 using YZV25.Service;
 using YZV25.Utils;
+using static Org.BouncyCastle.Math.EC.ECCurve;
 
 namespace YZV25
 {
@@ -104,6 +107,8 @@ namespace YZV25
                 return new MesRpcClient(config["MES:Hostname"]!.ToString(), config, logger);
             });
 
+
+
             //数据访问层，
             builder.Services.AddTransient<SqlServerDal>();
 
@@ -134,42 +139,54 @@ namespace YZV25
             //fsw opcua客户端，用于读取fsw设备的信息
             builder.Services.AddKeyedSingleton<FSWOpcUaClient>("fsw1", (provider, key) => new FSWOpcUaClient("opc.tcp://192.168.106.160:4840"));
             //fsw夹具  s7客户端
-            builder.Services.AddKeyedSingleton<SiemensS7Net>("fsw1", (provider, key) => new SiemensS7Net(SiemensPLCS.S1200, "192.168.106.170"));
+            builder.Services.AddKeyedSingleton<SiemensS7Net>("fsw1", (provider, key) => new SiemensS7Net(SiemensPLCS.S1200, "192.168.106.165"));
 
             //cmt mqtt客户端 用于读取cmt设备数据
-            builder.Services.AddKeyedSingleton<CMTMqttRpcClient>("cmt1", (provider, key) =>
-            {
 
-                return new CMTMqttRpcClient("cmt1", "127.0.0.1", 1521, new string[] { "A", "B"});
-            });
             builder.Services.AddKeyedSingleton<CMTMqttRpcClient>("cmt2", (provider, key) =>
             {
 
                 return new CMTMqttRpcClient("cmt2", "127.0.0.1", 1521, new string[] { "A", "B" });
             });
-            builder.Services.AddKeyedSingleton<CMTMqttRpcClient>("cmt3", (provider, key) =>
-            {
 
-                return new CMTMqttRpcClient("cmt3", "127.0.0.1", 1521, new string[] { "A", "B","C" });
+
+            builder.Services.AddKeyedTransient<CMTMcClient>("cmt1", (provider, key) =>
+            {
+                return new CMTMcClient("192.168.106.10", 5559, ["A", "B"]);
             });
 
-            //CMT 监听器 3台
+            builder.Services.AddKeyedTransient<CMTMcClient>("cmt3", (provider, key) =>
+            {
+                return new CMTMcClient("192.168.106.50", 5559, ["A", "B","C"]);
+            });
+
             builder.Services.AddKeyedSingleton<IMonitor>("cmt1", (provider, key) =>
             {
                 var mesRpcClient = provider.GetRequiredService<MesRpcClient>();
                 var mqttClient = provider.GetRequiredService<MqttClient>();
-                var cmtMqttRpcClient = provider.GetRequiredKeyedService<CMTMqttRpcClient>("cmt1");
+                var cmtMqttRpcClient = provider.GetRequiredKeyedService<CMTMcClient>("cmt1");
                 var logger = provider.GetRequiredService<ILogger<CMTMonitor>>();
                 var mediator = provider.GetRequiredService<IMediator>();
-                return new CMTMonitor(
-                    "cmt1",
-                   new string[] {
-                    "B面工步","A面工步"
-                    },
-                    mesRpcClient, mqttClient, cmtMqttRpcClient, mediator, logger
+                return new CMTMcMonitor(
+                    "cmt1", new string[] { }, mesRpcClient, mqttClient, cmtMqttRpcClient, mediator, logger
                     );
 
             });
+
+            builder.Services.AddKeyedSingleton<IMonitor>("cmt3", (provider, key) =>
+            {
+                var mesRpcClient = provider.GetRequiredService<MesRpcClient>();
+                var mqttClient = provider.GetRequiredService<MqttClient>();
+                var cmtMqttRpcClient = provider.GetRequiredKeyedService<CMTMcClient>("cmt3");
+                var logger = provider.GetRequiredService<ILogger<CMTMonitor>>();
+                var mediator = provider.GetRequiredService<IMediator>();
+                return new CMTMcMonitor(
+                    "cmt1", new string[] {}, mesRpcClient, mqttClient, cmtMqttRpcClient, mediator, logger
+                    );
+
+            });
+
+            //CMT 监听器 1台 西门子
             builder.Services.AddKeyedSingleton<IMonitor>("cmt2", (provider, key) =>
             {
                 var mesRpcClient = provider.GetRequiredService<MesRpcClient>();
@@ -184,22 +201,7 @@ namespace YZV25
                     );
 
             });
-            builder.Services.AddKeyedSingleton<IMonitor>("cmt3", (provider, key) =>
-            {
-                var mesRpcClient = provider.GetRequiredService<MesRpcClient>();
-                var mqttClient = provider.GetRequiredService<MqttClient>();
-                var cmtMqttRpcClient = provider.GetRequiredKeyedService<CMTMqttRpcClient>("cmt3");
-                var logger = provider.GetRequiredService<ILogger<CMTMonitor>>();
-                var mediator = provider.GetRequiredService<IMediator>();
-                return new CMTMonitor(
-                    "cmt3",
-                    new string[] {
-                    "B面工步","A面工步","C面工步"
-                    },
-                    mesRpcClient, mqttClient, cmtMqttRpcClient, mediator, logger
-                    );
 
-            });
 
             //CNC 监听器 9台
             builder.Services.AddKeyedSingleton<IMonitor>("cnc1", (provider, key) =>
@@ -363,6 +365,7 @@ namespace YZV25
             builder.Services.AddScoped<LogQueryService>();
             builder.Services.AddScoped<ScanService>();
             builder.Services.AddScoped<DeviceService>();
+            builder.Services.AddScoped<BusinessLogService>();
             builder.Services.AddScoped<MesSettingService>();
 
             builder.Services.AddControllers();

@@ -22,7 +22,7 @@ namespace YZV25.UI.UserControls
         public PdaListUCtrl()
         {
             InitializeComponent();
-            _timer = new System.Timers.Timer(5000); // 每1秒触发一次
+            _timer = new System.Timers.Timer(1000); // 每1秒触发一次
             _timer.Elapsed += OnTimerElapsed;
             _timer.AutoReset = true; // 重复触发
             _timer.Enabled = false; // 初始不启动
@@ -71,6 +71,8 @@ namespace YZV25.UI.UserControls
                 }
             }
 
+
+            _timer.Start();
         }
     }
 }

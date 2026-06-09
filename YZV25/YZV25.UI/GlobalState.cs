@@ -8,6 +8,6 @@ namespace YZV25.UI
 {
     public static class GlobalState
     {
-        public static string RPC_BASEURL="http://192.168.60.36:6060";
+        public static string RPC_BASEURL="http://127.0.0.1:6060";
     }
 }

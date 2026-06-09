@@ -15,18 +15,29 @@ namespace YZV25.Utils
 
         public bool Connect()
         {
-            fanuc.ConnectClose();
-            OperateResult connect = fanuc.ConnectServer();
-            if (connect.IsSuccess)
+            try
             {
-                Console.WriteLine("fannuc连接成功");
+                fanuc.ConnectClose();
+                OperateResult connect = fanuc.ConnectServer();
+                if (connect.IsSuccess)
+                {
+                    Console.WriteLine("fannuc连接成功");
+                }
+                else
+                {
+                    Console.WriteLine("fanuc连接失败: " + connect.Message);
+                }
+
+                return connect.IsSuccess;
             }
-            else
+            catch (Exception ex)
             {
-                Console.WriteLine("fanuc连接失败: " + connect.Message);
+
+                Console.WriteLine($"fanuc 连接失败:{ex.Message}");
             }
 
-            return connect.IsSuccess;
+            return false;
+
         }
 
 
@@ -34,7 +45,8 @@ namespace YZV25.Utils
         {
             //如果读取系统状态信息成功，则继续读取其他数据
             OperateResult<SysStatusInfo> read = fanuc.ReadSysStatusInfo();
-            if (read.IsSuccess) {
+            if (read.IsSuccess)
+            {
 
                 CNC data = new CNC();
 
@@ -51,7 +63,8 @@ namespace YZV25.Utils
             return new CNC();
         }
 
-        public SysStatusInfo ReadSysStatus() {
+        public SysStatusInfo ReadSysStatus()
+        {
 
             OperateResult<SysStatusInfo> read = fanuc.ReadSysStatusInfo();
 
